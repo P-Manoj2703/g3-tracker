@@ -6,228 +6,97 @@
 <title>G3 Builders — Log Expense</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
-
   :root {
-    --bg: #0f1117;
-    --surface: #181c25;
-    --surface2: #1e2333;
-    --border: #2a3040;
-    --accent: #f0a500;
-    --accent2: #e05c2a;
-    --text: #e8eaf0;
-    --muted: #6b7280;
-    --success: #22c55e;
-    --danger: #ef4444;
-    --mono: 'IBM Plex Mono', monospace;
-    --sans: 'IBM Plex Sans', sans-serif;
+    --bg: #0f1117; --surface: #181c25; --surface2: #1e2333; --border: #2a3040;
+    --accent: #f0a500; --accent2: #e05c2a; --text: #e8eaf0; --muted: #6b7280;
+    --success: #22c55e; --danger: #ef4444;
+    --mono: 'IBM Plex Mono', monospace; --sans: 'IBM Plex Sans', sans-serif;
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--sans);
-    min-height: 100vh;
-    padding: 0;
-  }
-
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; }
   .header {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 16px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 10;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 16px 20px; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 10;
   }
-
   .header-left { display: flex; align-items: center; gap: 12px; }
-
   .logo-mark {
-    width: 36px; height: 36px;
-    background: var(--accent);
-    border-radius: 6px;
+    width: 36px; height: 36px; background: var(--accent); border-radius: 6px;
     display: flex; align-items: center; justify-content: center;
-    font-family: var(--mono);
-    font-weight: 600;
-    font-size: 14px;
-    color: #000;
+    font-family: var(--mono); font-weight: 600; font-size: 14px; color: #000;
   }
-
-  .header h1 { font-size: 15px; font-weight: 500; letter-spacing: 0.02em; }
+  .header h1 { font-size: 15px; font-weight: 500; }
   .header p { font-size: 11px; color: var(--muted); font-family: var(--mono); }
-
   .ref-badge {
-    font-family: var(--mono);
-    font-size: 11px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    padding: 4px 10px;
-    border-radius: 4px;
-    color: var(--accent);
+    font-family: var(--mono); font-size: 11px; background: var(--surface2);
+    border: 1px solid var(--border); padding: 4px 10px; border-radius: 4px; color: var(--accent);
   }
-
   .container { max-width: 520px; margin: 0 auto; padding: 24px 16px 80px; }
-
   .section-label {
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 0.12em;
-    color: var(--muted);
-    text-transform: uppercase;
-    margin-bottom: 12px;
-    margin-top: 28px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; color: var(--muted);
+    text-transform: uppercase; margin-bottom: 12px; margin-top: 28px;
+    display: flex; align-items: center; gap: 8px;
   }
-  .section-label::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
   .field { margin-bottom: 14px; }
-
   label {
-    display: block;
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--muted);
-    margin-bottom: 6px;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    font-family: var(--mono);
+    display: block; font-size: 11px; font-weight: 500; color: var(--muted);
+    margin-bottom: 6px; letter-spacing: 0.04em; text-transform: uppercase; font-family: var(--mono);
   }
-
   input, select, textarea {
-    width: 100%;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--text);
-    font-family: var(--sans);
-    font-size: 15px;
-    padding: 11px 14px;
-    outline: none;
-    transition: border-color 0.15s;
-    -webkit-appearance: none;
+    width: 100%; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; color: var(--text); font-family: var(--sans); font-size: 15px;
+    padding: 11px 14px; outline: none; transition: border-color 0.15s; -webkit-appearance: none;
   }
-
-  input:focus, select:focus, textarea:focus {
-    border-color: var(--accent);
-  }
-
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
   input::placeholder { color: var(--muted); }
-
   select option { background: var(--surface2); }
-
   .amount-wrap { position: relative; }
   .amount-wrap span {
-    position: absolute;
-    left: 14px; top: 50%;
-    transform: translateY(-50%);
-    font-family: var(--mono);
-    font-size: 15px;
-    color: var(--accent);
-    font-weight: 600;
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    font-family: var(--mono); font-size: 15px; color: var(--accent); font-weight: 600;
   }
   .amount-wrap input { padding-left: 30px; font-family: var(--mono); font-size: 18px; font-weight: 500; }
-
-  .amount-preview {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--muted);
-    margin-top: 4px;
-    min-height: 16px;
-  }
+  .amount-preview { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 4px; min-height: 16px; }
   .amount-preview.large { color: var(--accent2); }
-
   .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
   textarea { resize: none; height: 80px; font-size: 14px; line-height: 1.5; }
-
-  .gps-row { display: flex; gap: 8px; align-items: flex-start; }
+  .gps-row { display: flex; gap: 8px; }
   .gps-row input { flex: 1; font-family: var(--mono); font-size: 12px; }
   .gps-btn {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--text);
-    padding: 11px 14px;
-    cursor: pointer;
-    font-size: 13px;
-    white-space: nowrap;
-    font-family: var(--sans);
-    transition: border-color 0.15s, background 0.15s;
-    flex-shrink: 0;
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+    color: var(--text); padding: 11px 14px; cursor: pointer; font-size: 13px;
+    white-space: nowrap; font-family: var(--sans); transition: border-color 0.15s; flex-shrink: 0;
   }
-  .gps-btn:hover { border-color: var(--accent); background: var(--surface); }
+  .gps-btn:hover { border-color: var(--accent); }
   .gps-btn.got { border-color: var(--success); color: var(--success); }
-
   .photo-area {
-    border: 1px dashed var(--border);
-    border-radius: 6px;
-    padding: 20px;
-    text-align: center;
-    cursor: pointer;
-    transition: border-color 0.15s;
-    position: relative;
+    border: 1px dashed var(--border); border-radius: 6px; padding: 20px;
+    text-align: center; cursor: pointer; transition: border-color 0.15s; position: relative;
   }
   .photo-area:hover { border-color: var(--accent); }
-  .photo-area input[type="file"] {
-    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
-  }
+  .photo-area input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
   .photo-area p { font-size: 13px; color: var(--muted); }
   .photo-area .icon { font-size: 24px; margin-bottom: 6px; }
   #photo-name { font-size: 11px; color: var(--success); margin-top: 4px; font-family: var(--mono); }
-
+  #photo-preview { margin-top: 10px; display: none; }
+  #photo-preview img { width: 100%; max-height: 200px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); }
   .submit-btn {
-    width: 100%;
-    background: var(--accent);
-    color: #000;
-    border: none;
-    border-radius: 8px;
-    padding: 16px;
-    font-family: var(--mono);
-    font-size: 14px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    cursor: pointer;
-    transition: opacity 0.15s, transform 0.1s;
-    margin-top: 28px;
-    text-transform: uppercase;
+    width: 100%; background: var(--accent); color: #000; border: none; border-radius: 8px;
+    padding: 16px; font-family: var(--mono); font-size: 14px; font-weight: 600;
+    letter-spacing: 0.06em; cursor: pointer; transition: opacity 0.15s; margin-top: 28px; text-transform: uppercase;
   }
   .submit-btn:hover { opacity: 0.9; }
-  .submit-btn:active { transform: scale(0.99); }
   .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
   .toast {
-    position: fixed;
-    bottom: 24px; left: 50%;
-    transform: translateX(-50%) translateY(80px);
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 20px;
-    font-size: 13px;
-    font-family: var(--mono);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    transition: transform 0.3s ease;
-    z-index: 100;
-    min-width: 260px;
-    justify-content: center;
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px 20px; font-size: 13px; font-family: var(--mono);
+    transition: transform 0.3s ease; z-index: 100; min-width: 260px; text-align: center;
   }
   .toast.show { transform: translateX(-50%) translateY(0); }
   .toast.success { border-color: var(--success); color: var(--success); }
   .toast.error { border-color: var(--danger); color: var(--danger); }
-
   .required { color: var(--accent2); margin-left: 2px; }
 </style>
 </head>
@@ -247,14 +116,12 @@
 <div class="container">
 
   <div class="section-label">Identity</div>
-
   <div class="field">
     <label>Submitted By <span class="required">*</span></label>
     <input type="text" id="submittedBy" placeholder="Your name" autocomplete="name">
   </div>
 
   <div class="section-label">Payment Details</div>
-
   <div class="field">
     <label>Amount (₹) <span class="required">*</span></label>
     <div class="amount-wrap">
@@ -302,7 +169,6 @@
   </div>
 
   <div class="section-label">Location & Proof</div>
-
   <div class="field">
     <label>GPS Location</label>
     <div class="gps-row">
@@ -319,11 +185,12 @@
       <p>Tap to photograph the bill</p>
       <div id="photo-name"></div>
     </div>
+    <div id="photo-preview">
+      <img id="photo-preview-img" src="" alt="Preview">
+    </div>
   </div>
 
-  <button class="submit-btn" id="submit-btn" onclick="submitEntry()">
-    ⬆ Submit Entry
-  </button>
+  <button class="submit-btn" id="submit-btn" onclick="submitEntry()">⬆ Submit Entry</button>
 
 </div>
 
@@ -338,18 +205,17 @@
     const mm = String(d.getMonth()+1).padStart(2,'0');
     const yy = String(d.getFullYear()).slice(-2);
     const rand = Math.floor(Math.random()*900)+100;
-    return `G3-${dd}${mm}${yy}-${rand}`;
+    return 'G3-' + dd + mm + yy + '-' + rand;
   }
 
-  const REF = genRef();
+  let REF = genRef();
   document.getElementById('ref-display').textContent = REF;
 
   function updateAmount() {
     const val = parseInt(document.getElementById('amount').value) || 0;
     const el = document.getElementById('amount-preview');
     if (!val) { el.textContent = ''; el.className = 'amount-preview'; return; }
-    const formatted = '₹' + val.toLocaleString('en-IN');
-    el.textContent = formatted + (val >= 25000 ? ' — WhatsApp alert will be sent' : '');
+    el.textContent = '₹' + val.toLocaleString('en-IN') + (val >= 25000 ? ' — WhatsApp alert will be sent' : '');
     el.className = 'amount-preview' + (val >= 25000 ? ' large' : '');
   }
 
@@ -359,13 +225,12 @@
     btn.disabled = true;
     navigator.geolocation.getCurrentPosition(
       pos => {
-        const coords = `${pos.coords.latitude.toFixed(6)},${pos.coords.longitude.toFixed(6)}`;
-        document.getElementById('gps').value = coords;
+        document.getElementById('gps').value = pos.coords.latitude.toFixed(6) + ',' + pos.coords.longitude.toFixed(6);
         btn.textContent = '✓ Got it';
         btn.className = 'gps-btn got';
         btn.disabled = false;
       },
-      err => {
+      () => {
         btn.textContent = '📍 Capture';
         btn.disabled = false;
         showToast('Location access denied', 'error');
@@ -375,14 +240,21 @@
 
   function photoSelected() {
     const file = document.getElementById('photo').files[0];
-    if (file) document.getElementById('photo-name').textContent = '✓ ' + file.name;
+    if (!file) return;
+    document.getElementById('photo-name').textContent = '✓ ' + file.name;
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('photo-preview-img').src = e.target.result;
+      document.getElementById('photo-preview').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
   }
 
   function showToast(msg, type) {
     const t = document.getElementById('toast');
     t.textContent = msg;
-    t.className = 'toast show ' + (type||'');
-    setTimeout(() => t.className = 'toast', 3000);
+    t.className = 'toast show ' + (type || '');
+    setTimeout(() => t.className = 'toast', 3500);
   }
 
   async function submitEntry() {
@@ -394,13 +266,30 @@
       vendor: document.getElementById('vendor').value.trim(),
     };
 
-    for (const [k,v] of Object.entries(fields)) {
+    for (const [k, v] of Object.entries(fields)) {
       if (!v) { showToast('Please fill all required fields', 'error'); return; }
     }
 
     const btn = document.getElementById('submit-btn');
     btn.disabled = true;
     btn.textContent = '⏳ Submitting...';
+
+    // Convert photo to base64 if attached
+    let photoData = '', photoMime = '', photoName = '';
+    const photoFile = document.getElementById('photo').files[0];
+    if (photoFile) {
+      btn.textContent = '⏳ Reading photo...';
+      photoData = await new Promise((res, rej) => {
+        const reader = new FileReader();
+        reader.onload = () => res(reader.result.split(',')[1]);
+        reader.onerror = rej;
+        reader.readAsDataURL(photoFile);
+      });
+      photoMime = photoFile.type;
+      photoName = photoFile.name;
+    }
+
+    btn.textContent = '⏳ Saving entry...';
 
     const params = new URLSearchParams({
       ref: REF,
@@ -412,27 +301,28 @@
       vendor: fields.vendor,
       notes: document.getElementById('notes').value.trim(),
       gps: document.getElementById('gps').value,
-      photoUrl: document.getElementById('photo').files[0] ? 'photo-attached' : '',
+      photoData: photoData,
+      photoMime: photoMime,
+      photoName: photoName,
     });
 
     try {
       await fetch(SHEET_URL, { method: 'POST', body: params });
       showToast('✓ Entry saved — ' + REF, 'success');
       setTimeout(() => {
-        document.querySelectorAll('input:not([type=file]), select, textarea').forEach(el => {
-          if (el.id !== 'ref-display') el.value = '';
-        });
+        document.querySelectorAll('input:not([type=file]), select, textarea').forEach(el => el.value = '');
         document.getElementById('photo-name').textContent = '';
+        document.getElementById('photo-preview').style.display = 'none';
+        document.getElementById('photo-preview-img').src = '';
         document.getElementById('amount-preview').textContent = '';
         document.getElementById('gps-btn').textContent = '📍 Capture';
         document.getElementById('gps-btn').className = 'gps-btn';
-        const newRef = genRef();
-        document.getElementById('ref-display').textContent = newRef;
-        Object.assign(window, { REF: newRef });
+        REF = genRef();
+        document.getElementById('ref-display').textContent = REF;
         btn.disabled = false;
         btn.textContent = '⬆ Submit Entry';
       }, 1800);
-    } catch(err) {
+    } catch (err) {
       showToast('Failed — check connection', 'error');
       btn.disabled = false;
       btn.textContent = '⬆ Submit Entry';
