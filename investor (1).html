@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>G3 Builders — Investor Report</title>
+<link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div style="background:var(--surface);border-bottom:1px solid var(--border);padding:28px 24px;text-align:center;">
+  <div style="font-family:var(--mono);font-size:10px;letter-spacing:0.14em;color:var(--accent);text-transform:uppercase;border:1px solid rgba(240,165,0,0.3);display:inline-block;padding:4px 14px;border-radius:4px;margin-bottom:14px;">Investor Report — Live</div>
+  <h1 style="font-size:24px;font-weight:300;margin-bottom:6px;">G3 Builders <span style="font-weight:600;">Project Tracker</span></h1>
+  <p style="color:var(--muted);font-family:var(--mono);font-size:11px;" id="hero-date">Loading...</p>
+  <div style="display:flex;gap:24px;justify-content:center;margin-top:20px;flex-wrap:wrap;">
+    <div style="text-align:center;"><div style="font-family:var(--mono);font-size:18px;font-weight:600;color:var(--accent)" id="h-expenses">—</div><div style="font-size:10px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:0.06em;font-family:var(--mono)">Total Expenses</div></div>
+    <div style="text-align:center;"><div style="font-family:var(--mono);font-size:18px;font-weight:600;color:var(--success)" id="h-sales">—</div><div style="font-size:10px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:0.06em;font-family:var(--mono)">Sales Collected</div></div>
+    <div style="text-align:center;"><div style="font-family:var(--mono);font-size:18px;font-weight:600;" id="h-pct">—</div><div style="font-size:10px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:0.06em;font-family:var(--mono)">Budget Used</div></div>
+    <div style="text-align:center;"><div style="font-family:var(--mono);font-size:18px;font-weight:600;" id="h-days">—</div><div style="font-size:10px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:0.06em;font-family:var(--mono)">Days Active</div></div>
+    <div style="text-align:center;"><div style="font-family:var(--mono);font-size:18px;font-weight:600;color:var(--accent)" id="h-flats">—</div><div style="font-size:10px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:0.06em;font-family:var(--mono)">Flats Sold</div></div>
+  </div>
+</div>
+
+<div id="loading" class="loading">Loading project data...</div>
+
+<div id="main" style="display:none;max-width:960px;margin:0 auto;padding:28px 16px 60px;">
+
+  <div style="font-family:var(--mono);font-size:10px;letter-spacing:0.12em;color:var(--muted);text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:10px;">Budget Overview<span style="flex:1;height:1px;background:var(--border);display:block"></span></div>
+
+  <div class="budget-bar-wrap">
+    <div class="budget-numbers" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px;text-align:center;">
+      <div><div style="font-family:var(--mono);font-size:18px;font-weight:600;">₹50,00,000</div><div style="font-size:10px;color:var(--muted);margin-top:4px;font-family:var(--mono);text-transform:uppercase">Total Budget</div></div>
+      <div><div style="font-family:var(--mono);font-size:18px;font-weight:600;color:var(--warning)" id="b-spent">—</div><div style="font-size:10px;color:var(--muted);margin-top:4px;font-family:var(--mono);text-transform:uppercase">Deployed</div></div>
+      <div><div style="font-family:var(--mono);font-size:18px;font-weight:600;color:var(--success)" id="b-remaining">—</div><div style="font-size:10px;color:var(--muted);margin-top:4px;font-family:var(--mono);text-transform:uppercase">Remaining</div></div>
+    </div>
+    <div class="budget-bar-bg"><div class="budget-bar-fill" id="prog-fill" style="width:0%"></div></div>
+    <div class="budget-bar-labels"><span>₹0</span><span id="prog-pct">0%</span><span>₹50,00,000</span></div>
+  </div>
+
+  <div style="font-family:var(--mono);font-size:10px;letter-spacing:0.12em;color:var(--muted);text-transform:uppercase;margin-bottom:14px;margin-top:28px;display:flex;align-items:center;gap:10px;">Key Metrics<span style="flex:1;height:1px;background:var(--border);display:block"></span></div>
+
+  <div class="kpi-grid" style="margin-bottom:28px;">
+    <div class="kpi-card"><div class="kpi-label">Avg per transaction</div><div class="kpi-value" id="s-avg">—</div></div>
+    <div class="kpi-card"><div class="kpi-label">Largest payment</div><div class="kpi-value" id="s-largest">—</div></div>
+    <div class="kpi-card"><div class="kpi-label">This month</div><div class="kpi-value" id="s-month">—</div></div>
+    <div class="kpi-card"><div class="kpi-label">Monthly burn rate</div><div class="kpi-value" id="s-burn">—</div></div>
+  </div>
+
+  <div style="font-family:var(--mono);font-size:10px;letter-spacing:0.12em;color:var(--muted);text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:10px;">Spend Analysis<span style="flex:1;height:1px;background:var(--border);display:block"></span></div>
+
+  <div class="charts-grid" style="margin-bottom:28px;">
+    <div class="chart-card"><div class="chart-title">Expenses by Category</div><div class="chart-wrap"><canvas id="cat-chart"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title">Expenses vs Sales</div><div class="chart-wrap"><canvas id="cumul-chart"></canvas></div></div>
+  </div>
+
+  <div style="font-family:var(--mono);font-size:10px;letter-spacing:0.12em;color:var(--muted);text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:10px;">Category Breakdown<span style="flex:1;height:1px;background:var(--border);display:block"></span></div>
+
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:28px;">
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead><tr>
+        <th style="text-align:left;padding:10px 16px;font-family:var(--mono);font-size:10px;letter-spacing:0.08em;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--surface2);">Category</th>
+        <th style="text-align:left;padding:10px 16px;font-family:var(--mono);font-size:10px;letter-spacing:0.08em;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--surface2);">Amount</th>
+        <th style="text-align:left;padding:10px 16px;font-family:var(--mono);font-size:10px;letter-spacing:0.08em;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--surface2);">Transactions</th>
+        <th style="text-align:left;padding:10px 16px;font-family:var(--mono);font-size:10px;letter-spacing:0.08em;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--surface2);">Share</th>
+      </tr></thead>
+      <tbody id="breakdown-body"></tbody>
+    </table>
+  </div>
+
+  <div style="text-align:center;padding:20px;font-size:11px;color:var(--muted);font-family:var(--mono);border-top:1px solid var(--border);">
+    Live read-only view. Data updates in real time.<br>
+    G3 Builders — Confidential. Generated <span id="gen-date"></span>
+  </div>
+</div>
+
+<script>
+  async function load() {
+    try {
+      const res = await fetch(CONFIG.sheetURL + '?action=getAll');
+      const data = await res.json();
+      const expenses = (data.expenses||[]).filter(e=>e.ref);
+      const sales = (data.sales||[]).filter(s=>s.paymentref);
+      render(expenses, sales);
+    } catch(e) {
+      document.getElementById('loading').textContent = 'Failed to load data.';
+    }
+  }
+
+  function render(expenses, sales) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('main').style.display = 'block';
+
+    const totalExp = expenses.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+    const totalSales = sales.reduce((s,e)=>s+(parseFloat(e.receivedamount)||0),0);
+    const remaining = CONFIG.project.budget - totalExp;
+    const pct = Math.min((totalExp/CONFIG.project.budget)*100,100);
+    const now = new Date();
+    const daysActive = Math.ceil((now - new Date(CONFIG.project.startDate))/86400000);
+    const flats = new Set(sales.map(s=>s.flatid)).size;
+
+    document.getElementById('hero-date').textContent = 'As of ' + now.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+    document.getElementById('h-expenses').textContent = CONFIG.fmt(totalExp);
+    document.getElementById('h-sales').textContent = CONFIG.fmt(totalSales);
+    document.getElementById('h-pct').textContent = pct.toFixed(1)+'%';
+    document.getElementById('h-days').textContent = daysActive;
+    document.getElementById('h-flats').textContent = flats;
+
+    document.getElementById('b-spent').textContent = CONFIG.fmt(totalExp);
+    document.getElementById('b-remaining').textContent = CONFIG.fmt(remaining);
+    const fill = document.getElementById('prog-fill');
+    fill.style.width = pct+'%';
+    fill.style.background = pct>=90?'var(--danger)':pct>=80?'var(--warning)':'var(--success)';
+    document.getElementById('prog-pct').textContent = pct.toFixed(1)+'%';
+
+    const avg = totalExp/(expenses.length||1);
+    const largest = Math.max(...expenses.map(e=>parseFloat(e.amount)||0), 0);
+    const thisMonth = expenses.filter(e=>{const d=new Date(e.timestamp);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();}).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+    const burn = totalExp/Math.max(1,daysActive/30);
+    document.getElementById('s-avg').textContent = CONFIG.fmt(avg);
+    document.getElementById('s-largest').textContent = CONFIG.fmt(largest);
+    document.getElementById('s-month').textContent = CONFIG.fmt(thisMonth);
+    document.getElementById('s-burn').textContent = CONFIG.fmt(burn);
+    document.getElementById('gen-date').textContent = now.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+
+    const catMap = {};
+    expenses.forEach(e=>{ catMap[e.category||'Other']=(catMap[e.category||'Other']||0)+(parseFloat(e.amount)||0); });
+    const catLabels = Object.keys(catMap), catVals = catLabels.map(k=>catMap[k]);
+
+    new Chart(document.getElementById('cat-chart'), {
+      type:'doughnut',
+      data:{ labels:catLabels, datasets:[{ data:catVals, backgroundColor:CONFIG.chartColors, borderWidth:0, hoverOffset:6 }] },
+      options:{ responsive:true, maintainAspectRatio:false, cutout:'60%', plugins:{legend:{position:'bottom',labels:{color:'#6b7280',font:{family:'IBM Plex Mono',size:10},padding:8,boxWidth:10}}} }
+    });
+
+    const allTx = [
+      ...expenses.map(e=>({ts:new Date(e.timestamp),val:parseFloat(e.amount)||0,type:'exp'})),
+      ...sales.map(s=>({ts:new Date(s.timestamp),val:parseFloat(s.receivedamount)||0,type:'sal'})),
+    ].sort((a,b)=>a.ts-b.ts);
+    let rE=0,rS=0; const cL=[],eV=[],sV=[];
+    allTx.forEach(t=>{ if(t.type==='exp')rE+=t.val; else rS+=t.val; cL.push(t.ts.toLocaleDateString('en-IN',{month:'short',day:'numeric'})); eV.push(rE); sV.push(rS); });
+    new Chart(document.getElementById('cumul-chart'), {
+      type:'line',
+      data:{labels:cL, datasets:[
+        {label:'Expenses',data:eV,borderColor:'#e05c2a',backgroundColor:'rgba(224,92,42,0.08)',fill:true,tension:0.3,pointRadius:0,borderWidth:2},
+        {label:'Sales',data:sV,borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,0.08)',fill:true,tension:0.3,pointRadius:0,borderWidth:2},
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#6b7280',font:{family:'IBM Plex Mono',size:10},boxWidth:10}}},scales:{x:{ticks:{color:'#6b7280',font:{family:'IBM Plex Mono',size:9},maxTicksLimit:6},grid:{color:'#2a3040'}},y:{ticks:{color:'#6b7280',font:{family:'IBM Plex Mono',size:9},callback:v=>'₹'+v.toLocaleString('en-IN')},grid:{color:'#2a3040'}}}}
+    });
+
+    const maxVal = Math.max(...catVals,1);
+    document.getElementById('breakdown-body').innerHTML = catLabels.map((cat,i)=>{
+      const val=catVals[i];
+      const count=expenses.filter(e=>(e.category||'Other')===cat).length;
+      const share=((val/totalExp)*100).toFixed(1);
+      return '<tr><td style="padding:12px 16px;border-bottom:1px solid var(--border);font-weight:500">'+cat+'</td><td style="padding:12px 16px;border-bottom:1px solid var(--border);font-family:var(--mono);font-weight:600">'+CONFIG.fmt(val)+'</td><td style="padding:12px 16px;border-bottom:1px solid var(--border);font-family:var(--mono);color:var(--muted)">'+count+'</td><td style="padding:12px 16px;border-bottom:1px solid var(--border)"><div style="display:flex;align-items:center;gap:10px"><div style="flex:1;background:var(--surface2);border-radius:3px;height:6px;overflow:hidden"><div style="height:100%;border-radius:3px;background:'+CONFIG.chartColors[i%CONFIG.chartColors.length]+';width:'+(val/maxVal*100)+'%"></div></div><span style="font-family:var(--mono);font-size:11px;color:var(--muted);min-width:36px">'+share+'%</span></div></td></tr>';
+    }).join('');
+  }
+
+  load();
+</script>
+</body>
+</html>

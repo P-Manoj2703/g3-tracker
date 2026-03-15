@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>G3 Builders — Vendor Ledger</title>
+<link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <a href="index.html" class="logo-mark">G3</a>
+    <div>
+      <div class="header-title">Vendor Ledger</div>
+      <div class="header-sub">G3 Builders — Invoice vs Payment</div>
+    </div>
+  </div>
+  <div class="ref-badge" id="ref-display">REF-...</div>
+</div>
+
+<nav class="nav">
+  <a href="index.html">Home</a>
+  <a href="entry.html">Expense</a>
+  <a href="vendors.html" class="active">Vendors</a>
+  <a href="sales.html">Sales</a>
+  <a href="dashboard.html">Dashboard</a>
+</nav>
+
+<div class="container">
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px;">
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;">
+      <div style="font-family:var(--mono);font-size:10px;letter-spacing:0.1em;color:var(--muted);text-transform:uppercase;margin-bottom:16px;">Log Vendor Payment</div>
+
+      <div class="field">
+        <label>Vendor <span class="required">*</span></label>
+        <select id="vendorId">
+          <option value="">— select vendor —</option>
+        </select>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Invoice No</label>
+          <input type="text" id="invoiceNo" placeholder="INV-001">
+        </div>
+        <div class="field">
+          <label>Invoice Amount (₹)</label>
+          <div class="amount-wrap">
+            <span class="prefix">₹</span>
+            <input type="number" id="invoiceAmount" placeholder="0" inputmode="numeric">
+          </div>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Paid Amount (₹) <span class="required">*</span></label>
+          <div class="amount-wrap">
+            <span class="prefix">₹</span>
+            <input type="number" id="paidAmount" placeholder="0" inputmode="numeric">
+          </div>
+        </div>
+        <div class="field">
+          <label>Pay Mode <span class="required">*</span></label>
+          <select id="paymode">
+            <option value="">— select —</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Pay Date</label>
+        <input type="date" id="payDate">
+      </div>
+      <div class="field">
+        <label>Notes</label>
+        <textarea id="notes" placeholder="Work description, bill reference..."></textarea>
+      </div>
+      <div class="field">
+        <label>Photo / Invoice</label>
+        <div class="photo-area">
+          <input type="file" id="photo" accept="image/*" capture="environment" onchange="photoSelected()">
+          <div class="icon">📷</div>
+          <p>Photograph the invoice</p>
+          <div class="photo-name" id="photo-name"></div>
+        </div>
+      </div>
+      <button class="submit-btn" id="submit-btn" onclick="submitVendor()">⬆ Save Payment</button>
+    </div>
+
+    <div>
+      <div class="kpi-grid" style="grid-template-columns:1fr 1fr;margin-bottom:14px;">
+        <div class="kpi-card">
+          <div class="kpi-label">Total Invoiced</div>
+          <div class="kpi-value" id="kpi-invoiced">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Total Paid</div>
+          <div class="kpi-value" id="kpi-paid">—</div>
+        </div>
+        <div class="kpi-card warning">
+          <div class="kpi-label">Outstanding</div>
+          <div class="kpi-value" id="kpi-outstanding">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Vendors</div>
+          <div class="kpi-value" id="kpi-vendors">—</div>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-header">
+          <span class="table-title">Vendor Summary</span>
+          <button class="btn" onclick="loadData()">↻</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Vendor</th><th>Invoiced</th><th>Paid</th><th>Balance</th></tr></thead>
+            <tbody id="vendor-summary-body"></tbody>
+          </table>
+          <div id="summary-empty" class="empty" style="display:none">No data yet</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="table-card">
+    <div class="table-header">
+      <span class="table-title">All Payments</span>
+      <span style="font-family:var(--mono);font-size:11px;color:var(--muted)" id="entry-count"></span>
+    </div>
+    <div class="filter-row">
+      <select id="filter-vendor" onchange="renderTable()">
+        <option value="">All Vendors</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Ref</th><th>Date</th><th>Vendor</th><th>Invoice No</th><th>Invoiced</th><th>Paid</th><th>Mode</th><th>Notes</th><th>Photo</th></tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+      <div id="table-empty" class="empty" style="display:none">No entries yet</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+<script>
+  let allEntries = [];
+
+  function genRef() {
+    const d = new Date();
+    return 'VEN-' + String(d.getDate()).padStart(2,'0') + String(d.getMonth()+1).padStart(2,'0') + String(d.getFullYear()).slice(-2) + '-' + (Math.floor(Math.random()*900)+100);
+  }
+  let REF = genRef();
+  document.getElementById('ref-display').textContent = REF;
+
+  const venSel = document.getElementById('vendorId');
+  const filterVen = document.getElementById('filter-vendor');
+  CONFIG.vendors.forEach(v => {
+    venSel.innerHTML += '<option value="'+v.id+'">'+v.name+'</option>';
+    filterVen.innerHTML += '<option value="'+v.name+'">'+v.name+'</option>';
+  });
+  CONFIG.paymodes.forEach(p => { document.getElementById('paymode').innerHTML += '<option>'+p+'</option>'; });
+  document.getElementById('payDate').value = new Date().toISOString().slice(0,10);
+
+  function showToast(msg, type) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.className = 'toast show ' + (type||'');
+    setTimeout(() => t.className = 'toast', 3500);
+  }
+
+  function photoSelected() {
+    const file = document.getElementById('photo').files[0];
+    if (file) document.getElementById('photo-name').textContent = '✓ ' + file.name;
+  }
+
+  async function submitVendor() {
+    const vendorId = document.getElementById('vendorId').value;
+    const paidAmount = document.getElementById('paidAmount').value.trim();
+    const paymode = document.getElementById('paymode').value;
+    if (!vendorId || !paidAmount || !paymode) { showToast('Fill all required fields', 'error'); return; }
+
+    const vendorName = CONFIG.vendors.find(v=>v.id===vendorId)?.name || vendorId;
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true; btn.textContent = '⏳ Saving...';
+
+    let photoData = '', photoMime = '', photoName = '';
+    const photoFile = document.getElementById('photo').files[0];
+    if (photoFile) {
+      photoData = await new Promise((res,rej) => {
+        const reader = new FileReader();
+        reader.onload = () => res(reader.result.split(',')[1]);
+        reader.onerror = rej;
+        reader.readAsDataURL(photoFile);
+      });
+      photoMime = photoFile.type;
+      photoName = photoFile.name;
+    }
+
+    const params = new URLSearchParams({
+      type: 'vendor', ref: REF,
+      timestamp: new Date().toISOString(),
+      vendorId, vendorName,
+      invoiceNo: document.getElementById('invoiceNo').value.trim(),
+      invoiceAmount: document.getElementById('invoiceAmount').value.trim() || '0',
+      paidAmount, paymode,
+      payDate: document.getElementById('payDate').value,
+      notes: document.getElementById('notes').value.trim(),
+      photoData, photoMime, photoName,
+    });
+
+    try {
+      await fetch(CONFIG.sheetURL, { method: 'POST', body: params });
+      showToast('✓ Payment saved — ' + REF, 'success');
+      setTimeout(() => {
+        document.querySelectorAll('input:not([type=file]):not([type=date]), select, textarea').forEach(el => el.value = '');
+        document.getElementById('payDate').value = new Date().toISOString().slice(0,10);
+        document.getElementById('photo-name').textContent = '';
+        REF = genRef();
+        document.getElementById('ref-display').textContent = REF;
+        btn.disabled = false; btn.textContent = '⬆ Save Payment';
+        loadData();
+      }, 1800);
+    } catch(err) {
+      showToast('Failed — check connection', 'error');
+      btn.disabled = false; btn.textContent = '⬆ Save Payment';
+    }
+  }
+
+  async function loadData() {
+    try {
+      const res = await fetch(CONFIG.sheetURL + '?action=getVendors');
+      allEntries = await res.json();
+      renderKPIs();
+      renderSummary();
+      renderTable();
+    } catch(e) {}
+  }
+
+  function renderKPIs() {
+    const totalInvoiced = allEntries.reduce((s,e) => s + (parseFloat(e.invoiceamount)||0), 0);
+    const totalPaid = allEntries.reduce((s,e) => s + (parseFloat(e.paidamount)||0), 0);
+    const outstanding = totalInvoiced - totalPaid;
+    const vendors = new Set(allEntries.map(e=>e.vendorname)).size;
+    document.getElementById('kpi-invoiced').textContent = CONFIG.fmt(totalInvoiced);
+    document.getElementById('kpi-paid').textContent = CONFIG.fmt(totalPaid);
+    document.getElementById('kpi-outstanding').textContent = CONFIG.fmt(outstanding);
+    document.getElementById('kpi-vendors').textContent = vendors;
+  }
+
+  function renderSummary() {
+    const map = {};
+    allEntries.forEach(e => {
+      const n = e.vendorname || '—';
+      if (!map[n]) map[n] = { invoiced: 0, paid: 0 };
+      map[n].invoiced += parseFloat(e.invoiceamount)||0;
+      map[n].paid += parseFloat(e.paidamount)||0;
+    });
+    const body = document.getElementById('vendor-summary-body');
+    const empty = document.getElementById('summary-empty');
+    const rows = Object.entries(map);
+    if (!rows.length) { body.innerHTML=''; empty.style.display='block'; return; }
+    empty.style.display='none';
+    body.innerHTML = rows.map(([name, d]) => {
+      const bal = d.invoiced - d.paid;
+      return '<tr><td style="font-weight:500">'+name+'</td><td style="font-family:var(--mono)">'+CONFIG.fmt(d.invoiced)+'</td><td style="font-family:var(--mono);color:var(--success)">'+CONFIG.fmt(d.paid)+'</td><td style="font-family:var(--mono);color:'+(bal>0?'var(--warning)':'var(--muted)')+'">'+CONFIG.fmt(bal)+'</td></tr>';
+    }).join('');
+  }
+
+  function renderTable() {
+    const filterVendor = document.getElementById('filter-vendor').value;
+    const filtered = allEntries.filter(e => !filterVendor || e.vendorname === filterVendor).slice().reverse();
+    document.getElementById('entry-count').textContent = filtered.length + ' entries';
+    const body = document.getElementById('table-body');
+    const empty = document.getElementById('table-empty');
+    if (!filtered.length) { body.innerHTML=''; empty.style.display='block'; return; }
+    empty.style.display='none';
+    body.innerHTML = filtered.map(e => {
+      const pm = (e.paymode||'').toLowerCase();
+      const photoUrl = e.photourl || '';
+      const photoCell = photoUrl && photoUrl.startsWith('http') ? '<a href="'+photoUrl+'" target="_blank" class="photo-link">📷 View</a>' : '<span class="no-photo">—</span>';
+      return '<tr><td style="font-family:var(--mono);font-size:11px;color:var(--accent)">'+(e.invoiceref||'—')+'</td><td style="font-family:var(--mono);font-size:11px">'+CONFIG.fmtShort(e.timestamp)+'</td><td style="font-weight:500">'+(e.vendorname||'—')+'</td><td style="font-family:var(--mono);font-size:11px">'+(e.invoiceno||'—')+'</td><td style="font-family:var(--mono)">'+CONFIG.fmt(parseFloat(e.invoiceamount)||0)+'</td><td style="font-family:var(--mono);font-weight:500;color:var(--success)">'+CONFIG.fmt(parseFloat(e.paidamount)||0)+'</td><td><span class="badge badge-'+pm+'">'+(e.paymode||'—')+'</span></td><td style="color:var(--muted);font-size:12px">'+(e.notes||'')+'</td><td>'+photoCell+'</td></tr>';
+    }).join('');
+  }
+
+  loadData();
+</script>
+</body>
+</html>
