@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>G3 — Sales v3</title>
+<link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+<script src="formhelper.js"></script>
+</head>
+<body>
+<div class="header">
+  <div class="header-left">
+    <a href="index.html" class="logo">G3</a>
+    <div><div class="header-title">Sales Register</div><div class="header-sub">Sales Sheet</div></div>
+  </div>
+  <div class="refbadge" id="ref-display">ID-...</div>
+</div>
+<nav class="nav">
+  <a href="index.html">Home</a>
+  <a href="entry.html">Entry</a>
+  <a href="vendors.html">Vendors</a>
+  <a href="sales.html" class="active">Sales</a>
+  <a href="land.html">Land</a>
+  <a href="capital.html">Capital</a>
+  <a href="documents.html">Docs</a>
+  <a href="dashboard.html">Dashboard</a>
+</nav>
+<div class="wrap">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
+    <div class="card">
+      <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:14px;">Record Payment</div>
+      <div class="g2">
+        <div class="field">
+          <label>Flat No <span class="req">*</span></label>
+          <select id="flatNo"><option value="">— select —</option></select>
+        </div>
+        <div class="field">
+          <label>Payment Date</label>
+          <input type="date" id="paymentDate">
+        </div>
+      </div>
+      <div class="g2">
+        <div class="field">
+          <label>Buyer Name <span class="req">*</span></label>
+          <input type="text" id="buyerName" placeholder="Full name">
+        </div>
+        <div class="field">
+          <label>Payment Mode <span class="req">*</span></label>
+          <select id="paymentMode"><option value="">— select —</option></select>
+        </div>
+      </div>
+      <div class="g2">
+        <div class="field">
+          <label>Sale Value (₹)</label>
+          <div class="amtwrap"><span class="pfx">₹</span><input type="number" id="saleValue" placeholder="0" inputmode="numeric"></div>
+        </div>
+        <div class="field">
+          <label>Received (₹) <span class="req">*</span></label>
+          <div class="amtwrap"><span class="pfx">₹</span><input type="number" id="receivedAmount" placeholder="0" inputmode="numeric"></div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Payment Stage</label>
+        <select id="stage"><option value="">— select stage —</option></select>
+      </div>
+      <div class="field">
+        <label>Note</label>
+        <textarea id="note" placeholder="Cheque number, bank ref, remarks..."></textarea>
+      </div>
+      <div class="field">
+        <label>Receipt Photo</label>
+        <div class="photoarea">
+          <input type="file" id="photo" accept="image/*" capture="environment" onchange="photoSelected()">
+          <div class="icon">📷</div><p>Photograph receipt</p>
+          <div class="pname" id="pname"></div>
+        </div>
+      </div>
+      <button class="subbtn" id="subbtn" onclick="submitSale()">⬆ Save Payment</button>
+    </div>
+    <div>
+      <div class="kgrid" style="grid-template-columns:1fr 1fr;margin-bottom:14px;">
+        <div class="kcard ok"><div class="klabel">Total Received</div><div class="kval" id="k-rec">—</div></div>
+        <div class="kcard"><div class="klabel">Total Sale Value</div><div class="kval" id="k-sal">—</div></div>
+        <div class="kcard warn"><div class="klabel">Balance</div><div class="kval" id="k-bal">—</div></div>
+        <div class="kcard"><div class="klabel">Flats Active</div><div class="kval" id="k-flats">—</div></div>
+      </div>
+      <div class="tcard">
+        <div class="thead"><span class="ttitle">Flat Summary</span><button class="btn" onclick="loadData()">↻</button></div>
+        <div class="tscroll">
+          <table><thead><tr><th>Flat</th><th>Buyer</th><th>Sale Value</th><th>Received</th><th>Balance</th></tr></thead>
+          <tbody id="summary-body"></tbody></table>
+          <div id="summary-empty" class="empty" style="display:none">No sales yet</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="tcard">
+    <div class="thead"><span class="ttitle">All Payments</span><span style="font-family:var(--mono);font-size:10px;color:var(--muted)" id="ecount"></span></div>
+    <div class="frow">
+      <select id="f-flat" onchange="renderTable()"><option value="">All Flats</option></select>
+      <select id="f-stage" onchange="renderTable()"><option value="">All Stages</option></select>
+    </div>
+    <div class="tscroll">
+      <table><thead><tr><th>ID</th><th>Date</th><th>Flat</th><th>Buyer</th><th>Sale Value</th><th>Received</th><th>Balance</th><th>Mode</th><th>Stage</th><th>Note</th><th>Receipt</th></tr></thead>
+      <tbody id="tbody"></tbody></table>
+      <div id="empty" class="empty" style="display:none">No entries yet</div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+  var allData = [];
+  var ID = CONFIG.genID('SAL');
+  document.getElementById('ref-display').textContent = ID;
+  document.getElementById('paymentDate').value = new Date().toISOString().slice(0,10);
+
+  CONFIG.flats.forEach(function(f) {
+    document.getElementById('flatNo').innerHTML += '<option value="'+f.id+'">'+f.name+'</option>';
+    document.getElementById('f-flat').innerHTML += '<option value="'+f.id+'">'+f.name+'</option>';
+  });
+  CONFIG.paymentModes.forEach(function(p) {
+    document.getElementById('paymentMode').innerHTML += '<option>'+p+'</option>';
+  });
+  CONFIG.saleStages.forEach(function(s) {
+    document.getElementById('stage').innerHTML += '<option>'+s+'</option>';
+    document.getElementById('f-stage').innerHTML += '<option>'+s+'</option>';
+  });
+
+  function toast(msg, type) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + (type||'');
+    setTimeout(function(){ t.className = 'toast'; }, 3500);
+  }
+
+  function photoSelected() {
+    var f = document.getElementById('photo').files[0];
+    if (f) document.getElementById('pname').textContent = '✓ ' + f.name;
+  }
+
+  async function submitSale() {
+    var flatNo = document.getElementById('flatNo').value;
+    var buyerName = document.getElementById('buyerName').value.trim();
+    var receivedAmount = document.getElementById('receivedAmount').value.trim();
+    var paymentMode = document.getElementById('paymentMode').value;
+
+    if (!flatNo || !buyerName || !receivedAmount || !paymentMode) {
+      toast('Fill all required fields', 'err');
+      return;
+    }
+
+    var btn = document.getElementById('subbtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Saving...';
+
+    var saleVal = parseFloat(document.getElementById('saleValue').value) || 0;
+    var recAmt = parseFloat(receivedAmount) || 0;
+
+    var params = new URLSearchParams({
+      type: 'sale',
+      id: ID,
+      flatNo: flatNo,
+      buyerName: buyerName,
+      saleValue: saleVal,
+      receivedAmount: recAmt,
+      balance: saleVal - recAmt,
+      paymentDate: document.getElementById('paymentDate').value,
+      paymentMode: paymentMode,
+      stage: document.getElementById('stage').value,
+      note: document.getElementById('note').value.trim(),
+    });
+
+    var photoFile = document.getElementById('photo').files[0];
+
+    try {
+      await submitToSheet(params, photoFile, 'Sales');
+      toast('✓ Saved — ' + ID, 'ok');
+      setTimeout(function() {
+        document.querySelectorAll('input:not([type=file]):not([type=date]), select, textarea').forEach(function(el){ el.value=''; });
+        document.getElementById('paymentDate').value = new Date().toISOString().slice(0,10);
+        document.getElementById('pname').textContent = '';
+        ID = CONFIG.genID('SAL');
+        document.getElementById('ref-display').textContent = ID;
+        btn.disabled = false;
+        btn.textContent = '⬆ Save Payment';
+        loadData();
+      }, 1800);
+    } catch(err) {
+      toast('Failed — check connection', 'err');
+      btn.disabled = false;
+      btn.textContent = '⬆ Save Payment';
+    }
+  }
+
+  async function loadData() {
+    try {
+      var res = await fetch(CONFIG.sheetURL + '?action=getSales');
+      allData = await res.json();
+      renderKPIs();
+      renderSummary();
+      renderTable();
+    } catch(e) {}
+  }
+
+  function renderKPIs() {
+    var rec = allData.reduce(function(s,e){ return s+(parseFloat(e.receivedamount)||0); }, 0);
+    var sal = allData.reduce(function(s,e){ return s+(parseFloat(e.salevalue)||0); }, 0);
+    document.getElementById('k-rec').textContent = CONFIG.fmt(rec);
+    document.getElementById('k-sal').textContent = CONFIG.fmt(sal);
+    document.getElementById('k-bal').textContent = CONFIG.fmt(Math.max(0, sal-rec));
+    document.getElementById('k-flats').textContent = new Set(allData.map(function(e){ return e.flatno; })).size;
+  }
+
+  function renderSummary() {
+    var map = {};
+    allData.forEach(function(e) {
+      var id = e.flatno || '—';
+      if (!map[id]) map[id] = { buyer: e.buyername||'—', sal:0, rec:0 };
+      map[id].sal += parseFloat(e.salevalue)||0;
+      map[id].rec += parseFloat(e.receivedamount)||0;
+      if (e.buyername) map[id].buyer = e.buyername;
+    });
+    var rows = Object.entries(map);
+    var body = document.getElementById('summary-body');
+    var empty = document.getElementById('summary-empty');
+    if (!rows.length) { body.innerHTML=''; empty.style.display='block'; return; }
+    empty.style.display = 'none';
+    body.innerHTML = rows.map(function(r) {
+      var flat=r[0], d=r[1], b=d.sal-d.rec;
+      return '<tr><td style="font-family:var(--mono);color:var(--accent)">'+flat+'</td><td>'+d.buyer+'</td><td style="font-family:var(--mono)">'+CONFIG.fmt(d.sal)+'</td><td style="font-family:var(--mono);color:var(--ok)">'+CONFIG.fmt(d.rec)+'</td><td style="font-family:var(--mono);color:'+(b>0?'var(--warn)':'var(--muted)')+'">'+CONFIG.fmt(b)+'</td></tr>';
+    }).join('');
+  }
+
+  function renderTable() {
+    var ff = document.getElementById('f-flat').value;
+    var fs = document.getElementById('f-stage').value;
+    var filtered = allData.filter(function(e){ return (!ff||e.flatno===ff)&&(!fs||e.stage===fs); }).slice().reverse();
+    document.getElementById('ecount').textContent = filtered.length + ' entries';
+    var body = document.getElementById('tbody');
+    var empty = document.getElementById('empty');
+    if (!filtered.length) { body.innerHTML=''; empty.style.display='block'; return; }
+    empty.style.display = 'none';
+    body.innerHTML = filtered.map(function(e) {
+      var pm = (e.paymentmode||'').toLowerCase();
+      var ph = e.receipturl||'';
+      var phCell = ph&&ph.startsWith('http') ? '<a href="'+ph+'" target="_blank" class="plink">📷</a>' : '<span class="nolink">—</span>';
+      return '<tr><td style="font-family:var(--mono);font-size:10px;color:var(--accent)">'+(e.id||'—')+'</td><td style="font-family:var(--mono);font-size:10px">'+CONFIG.fmtShort(e.paymentdate||e.timestamp)+'</td><td style="font-family:var(--mono);color:var(--accent)">'+(e.flatno||'—')+'</td><td style="font-weight:500">'+(e.buyername||'—')+'</td><td style="font-family:var(--mono)">'+CONFIG.fmt(parseFloat(e.salevalue)||0)+'</td><td style="font-family:var(--mono);color:var(--ok);font-weight:500">'+CONFIG.fmt(parseFloat(e.receivedamount)||0)+'</td><td style="font-family:var(--mono);color:var(--warn)">'+CONFIG.fmt(parseFloat(e.balance)||0)+'</td><td><span class="badge b-'+pm+'">'+(e.paymentmode||'—')+'</span></td><td style="font-size:10px;color:var(--muted)">'+(e.stage||'—')+'</td><td style="color:var(--muted);font-size:10px">'+(e.note||'')+'</td><td>'+phCell+'</td></tr>';
+    }).join('');
+  }
+
+  loadData();
+</script>
+</body>
+</html>

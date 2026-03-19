@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>G3 — Log Entry</title>
+<link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+<script src="formhelper.js"></script>
+</head>
+<body>
+<div class="header">
+  <div class="header-left">
+    <a href="index.html" class="logo">G3</a>
+    <div><div class="header-title">Log Entry</div><div class="header-sub">Entries Sheet</div></div>
+  </div>
+  <div class="refbadge" id="ref-display">ID-...</div>
+</div>
+<nav class="nav">
+  <a href="index.html">Home</a>
+  <a href="entry.html" class="active">Entry</a>
+  <a href="vendors.html">Vendors</a>
+  <a href="sales.html">Sales</a>
+  <a href="land.html">Land</a>
+  <a href="capital.html">Capital</a>
+  <a href="documents.html">Docs</a>
+  <a href="dashboard.html">Dashboard</a>
+</nav>
+<div class="wrap-sm">
+
+  <div class="sec">Identity</div>
+  <div class="g2">
+    <div class="field">
+      <label>Submitted By <span class="req">*</span></label>
+      <input type="text" id="submittedBy" placeholder="Your name">
+    </div>
+    <div class="field">
+      <label>Role</label>
+      <select id="role">
+        <option value="supervisor">Supervisor</option>
+        <option value="owner">Owner</option>
+        <option value="accountant">Accountant</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="sec">Entry Details</div>
+  <div class="g2">
+    <div class="field">
+      <label>Date <span class="req">*</span></label>
+      <input type="date" id="date">
+    </div>
+    <div class="field">
+      <label>Category <span class="req">*</span></label>
+      <select id="category">
+        <option value="">— select —</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Amount (₹) <span class="req">*</span></label>
+    <div class="amtwrap">
+      <span class="pfx">₹</span>
+      <input type="number" id="amount" placeholder="0" inputmode="numeric" oninput="updateAmt()">
+    </div>
+    <div class="amtpre" id="amt-pre"></div>
+  </div>
+
+  <div class="g2">
+    <div class="field">
+      <label>Payment Mode <span class="req">*</span></label>
+      <select id="paymentMode">
+        <option value="">— select —</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Flat No (if applicable)</label>
+      <select id="flatNo">
+        <option value="">— none —</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Vendor Name</label>
+    <select id="vendorSelect">
+      <option value="">— select vendor —</option>
+    </select>
+  </div>
+  <div class="field">
+    <input type="text" id="vendorName" placeholder="Or type vendor name manually" style="margin-top:-7px;">
+  </div>
+
+  <div class="field">
+    <label>Note</label>
+    <textarea id="note" placeholder="Bill number, work description, or 'No receipt — reason'"></textarea>
+  </div>
+
+  <div class="sec">Location & Proof</div>
+  <div class="field">
+    <label>GPS</label>
+    <div class="gpsrow">
+      <input type="text" id="gps" placeholder="Tap to capture" readonly>
+      <button class="gpsbtn" id="gpsbtn" onclick="getGPS()">📍 Capture</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Photo / Bill</label>
+    <div class="photoarea">
+      <input type="file" id="photo" accept="image/*" capture="environment" onchange="photoSelected()">
+      <div class="icon">📷</div>
+      <p>Tap to photograph</p>
+      <div class="pname" id="pname"></div>
+    </div>
+    <div class="pprev" id="pprev"><img id="pimg" src="" alt=""></div>
+  </div>
+
+  <button class="subbtn" id="subbtn" onclick="submit()">⬆ Submit Entry</button>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+  let ID = CONFIG.genID('ENT');
+  document.getElementById('ref-display').textContent = ID;
+  document.getElementById('date').value = new Date().toISOString().slice(0,10);
+
+  CONFIG.categories.forEach(c => {
+    document.getElementById('category').innerHTML += '<option value="'+c.name+'">'+c.name+'</option>';
+  });
+  CONFIG.paymentModes.forEach(p => {
+    document.getElementById('paymentMode').innerHTML += '<option>'+p+'</option>';
+  });
+  CONFIG.vendors.forEach(v => {
+    document.getElementById('vendorSelect').innerHTML += '<option value="'+v.name+'">'+v.name+'</option>';
+  });
+  CONFIG.flats.forEach(f => {
+    document.getElementById('flatNo').innerHTML += '<option value="'+f.id+'">'+f.name+'</option>';
+  });
+
+  function updateAmt() {
+    const v = parseInt(document.getElementById('amount').value)||0;
+    const el = document.getElementById('amt-pre');
+    if (!v) { el.textContent=''; el.className='amtpre'; return; }
+    el.textContent = CONFIG.fmt(v) + (v >= CONFIG.largeAmountAlert ? ' — WhatsApp alert will be sent' : '');
+    el.className = 'amtpre' + (v >= CONFIG.largeAmountAlert ? ' large' : '');
+  }
+
+  function getGPS() {
+    const btn = document.getElementById('gpsbtn');
+    btn.textContent='⏳ Getting...'; btn.disabled=true;
+    navigator.geolocation.getCurrentPosition(
+      p => { document.getElementById('gps').value=p.coords.latitude.toFixed(6)+','+p.coords.longitude.toFixed(6); btn.textContent='✓ Got it'; btn.className='gpsbtn got'; btn.disabled=false; },
+      () => { btn.textContent='📍 Capture'; btn.disabled=false; toast('Location denied','err'); }
+    );
+  }
+
+  function photoSelected() {
+    const f = document.getElementById('photo').files[0];
+    if (!f) return;
+    document.getElementById('pname').textContent = '✓ '+f.name;
+    const r = new FileReader();
+    r.onload = e => { document.getElementById('pimg').src=e.target.result; document.getElementById('pprev').style.display='block'; };
+    r.readAsDataURL(f);
+  }
+
+  function toast(msg, type) {
+    const t = document.getElementById('toast');
+    t.textContent=msg; t.className='toast show '+(type||'');
+    setTimeout(()=>t.className='toast',3500);
+  }
+
+  async function submit() {
+    const vendorManual = document.getElementById('vendorName').value.trim();
+    const vendorSel = document.getElementById('vendorSelect').value;
+    const vendorFinal = vendorManual || vendorSel || '';
+
+    const req = {
+      submittedBy: document.getElementById('submittedBy').value.trim(),
+      amount: document.getElementById('amount').value.trim(),
+      category: document.getElementById('category').value,
+      paymentMode: document.getElementById('paymentMode').value,
+    };
+    for (const [k,v] of Object.entries(req)) {
+      if (!v) { toast('Fill all required fields','err'); return; }
+    }
+
+    const btn = document.getElementById('subbtn');
+    btn.disabled=true; btn.textContent='⏳ Submitting...';
+
+    const pf = document.getElementById('photo').files[0];
+    btn.textContent='⏳ Saving...';
+
+    const params = new URLSearchParams({
+      type: 'entry', id: ID,
+      date: document.getElementById('date').value,
+      category: req.category,
+      amount: req.amount,
+      paymentMode: req.paymentMode,
+      vendorName: vendorFinal,
+      flatNo: document.getElementById('flatNo').value,
+      note: document.getElementById('note').value.trim(),
+      gps: document.getElementById('gps').value,
+      submittedBy: req.submittedBy,
+      role: document.getElementById('role').value,
+    });
+
+    try {
+      await submitToSheet(params, pf, 'Entries');
+      toast('✓ Saved — '+ID, 'ok');
+      setTimeout(()=>{
+        document.querySelectorAll('input:not([type=file]):not([type=date]), select, textarea').forEach(el=>el.value='');
+        document.getElementById('date').value = new Date().toISOString().slice(0,10);
+        document.getElementById('pname').textContent='';
+        document.getElementById('pprev').style.display='none';
+        document.getElementById('amt-pre').textContent='';
+        document.getElementById('gpsbtn').textContent='📍 Capture';
+        document.getElementById('gpsbtn').className='gpsbtn';
+        ID=CONFIG.genID('ENT');
+        document.getElementById('ref-display').textContent=ID;
+        btn.disabled=false; btn.textContent='⬆ Submit Entry';
+      },1800);
+    } catch(e) {
+      toast('Failed — check connection','err');
+      btn.disabled=false; btn.textContent='⬆ Submit Entry';
+    }
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>G3 — Documents</title>
+<link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+<script src="formhelper.js"></script>
+</head>
+<body>
+<div class="header">
+  <div class="header-left">
+    <a href="index.html" class="logo">G3</a>
+    <div><div class="header-title">Documents</div><div class="header-sub">Documents Sheet</div></div>
+  </div>
+  <div class="refbadge" id="ref-display">ID-...</div>
+</div>
+<nav class="nav">
+  <a href="index.html">Home</a>
+  <a href="entry.html">Entry</a>
+  <a href="vendors.html">Vendors</a>
+  <a href="sales.html">Sales</a>
+  <a href="land.html">Land</a>
+  <a href="capital.html">Capital</a>
+  <a href="documents.html" class="active">Docs</a>
+  <a href="dashboard.html">Dashboard</a>
+</nav>
+<div class="wrap">
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
+
+    <div class="card">
+      <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:14px;">Upload Document</div>
+
+      <div class="field">
+        <label>Document Type <span class="req">*</span></label>
+        <select id="docType"><option value="">— select type —</option></select>
+      </div>
+      <div class="field">
+        <label>Linked To (ID or name)</label>
+        <input type="text" id="linkedTo" placeholder="e.g. VEN-150326-001 or Flat A101">
+      </div>
+      <div class="field">
+        <label>Uploaded By <span class="req">*</span></label>
+        <input type="text" id="uploadedBy" placeholder="Your name">
+      </div>
+      <div class="field">
+        <label>File / Photo <span class="req">*</span></label>
+        <div class="photoarea">
+          <input type="file" id="photo" accept="image/*,application/pdf" onchange="photoSelected()">
+          <div class="icon">📁</div>
+          <p>Tap to select file or photo</p>
+          <div class="pname" id="pname"></div>
+        </div>
+        <div class="pprev" id="pprev"><img id="pimg" src="" alt=""></div>
+      </div>
+      <button class="subbtn" id="subbtn" onclick="submitDoc()">⬆ Upload Document</button>
+    </div>
+
+    <div>
+      <div class="kgrid" style="grid-template-columns:1fr 1fr;margin-bottom:14px;">
+        <div class="kcard"><div class="klabel">Total Documents</div><div class="kval" id="k-total">—</div></div>
+        <div class="kcard"><div class="klabel">Doc Types</div><div class="kval" id="k-types">—</div></div>
+      </div>
+      <div class="tcard">
+        <div class="thead"><span class="ttitle">Type Summary</span><button class="btn" onclick="loadData()">↻</button></div>
+        <div class="tscroll">
+          <table><thead><tr><th>Type</th><th>Count</th></tr></thead>
+          <tbody id="summary-body"></tbody></table>
+          <div id="summary-empty" class="empty" style="display:none">No documents yet</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="tcard">
+    <div class="thead"><span class="ttitle">All Documents</span><span style="font-family:var(--mono);font-size:10px;color:var(--muted)" id="ecount"></span></div>
+    <div class="frow">
+      <select id="f-type" onchange="renderTable()"><option value="">All Types</option></select>
+    </div>
+    <div class="tscroll">
+      <table><thead><tr><th>ID</th><th>Date</th><th>Type</th><th>Linked To</th><th>Uploaded By</th><th>File</th></tr></thead>
+      <tbody id="tbody"></tbody></table>
+      <div id="empty" class="empty" style="display:none">No documents yet</div>
+    </div>
+  </div>
+
+</div>
+<div class="toast" id="toast"></div>
+<script>
+  let allData=[];
+  let ID=CONFIG.genID('DOC');
+  document.getElementById('ref-display').textContent=ID;
+
+  const dtSel=document.getElementById('docType');
+  const fType=document.getElementById('f-type');
+  CONFIG.docTypes.forEach(d=>{
+    dtSel.innerHTML+='<option>'+d+'</option>';
+    fType.innerHTML+='<option>'+d+'</option>';
+  });
+
+  function toast(msg,type){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+(type||'');setTimeout(()=>t.className='toast',3500);}
+
+  function photoSelected(){
+    const f=document.getElementById('photo').files[0];
+    if(!f)return;
+    document.getElementById('pname').textContent='✓ '+f.name;
+    if(f.type.startsWith('image/')){
+      const r=new FileReader();
+      r.onload=e=>{document.getElementById('pimg').src=e.target.result;document.getElementById('pprev').style.display='block';};
+      r.readAsDataURL(f);
+    }
+  }
+
+  async function submitDoc(){
+    const docType=document.getElementById('docType').value;
+    const uploadedBy=document.getElementById('uploadedBy').value.trim();
+    const pf=document.getElementById('photo').files[0];
+    if(!docType||!uploadedBy||!pf){toast('Fill all required fields','err');return;}
+
+    const btn=document.getElementById('subbtn');
+    btn.disabled=true;btn.textContent='⏳ Uploading...';
+
+    const params=new URLSearchParams({
+      type:'document',id:ID,
+      linkedTo:document.getElementById('linkedTo').value.trim(),
+      docType,uploadedBy,
+    });
+
+    try{
+      await submitToSheet(params, pf, 'Documents');
+      toast('✓ Uploaded — '+ID,'ok');
+      setTimeout(()=>{
+        document.querySelectorAll('input:not([type=file]),select').forEach(el=>el.value='');
+        document.getElementById('pname').textContent='';
+        document.getElementById('pprev').style.display='none';
+        ID=CONFIG.genID('DOC');
+        document.getElementById('ref-display').textContent=ID;
+        btn.disabled=false;btn.textContent='⬆ Upload Document';
+        loadData();
+      },1800);
+    }catch(e){toast('Failed','err');btn.disabled=false;btn.textContent='⬆ Upload Document';}
+  }
+
+  async function loadData(){
+    try{
+      const res=await fetch(CONFIG.sheetURL+'?action=getDocuments');
+      allData=await res.json();
+      renderKPIs();renderSummary();renderTable();
+    }catch(e){}
+  }
+
+  function renderKPIs(){
+    document.getElementById('k-total').textContent=allData.length;
+    document.getElementById('k-types').textContent=new Set(allData.map(e=>e.doctype)).size;
+  }
+
+  function renderSummary(){
+    const map={};
+    allData.forEach(e=>{const t=e.doctype||'Other';if(!map[t])map[t]=0;map[t]++;});
+    const rows=Object.entries(map);
+    const body=document.getElementById('summary-body');
+    const empty=document.getElementById('summary-empty');
+    if(!rows.length){body.innerHTML='';empty.style.display='block';return;}
+    empty.style.display='none';
+    body.innerHTML=rows.map(([t,c])=>'<tr><td style="font-weight:500">'+t+'</td><td style="font-family:var(--mono);color:var(--muted)">'+c+'</td></tr>').join('');
+  }
+
+  function renderTable(){
+    const ft=document.getElementById('f-type').value;
+    const filtered=allData.filter(e=>!ft||e.doctype===ft).slice().reverse();
+    document.getElementById('ecount').textContent=filtered.length+' documents';
+    const body=document.getElementById('tbody');
+    const empty=document.getElementById('empty');
+    if(!filtered.length){body.innerHTML='';empty.style.display='block';return;}
+    empty.style.display='none';
+    body.innerHTML=filtered.map(e=>{
+      const fu=e.fileurl||'';
+      const fCell=fu&&fu.startsWith('http')?'<a href="'+fu+'" target="_blank" class="plink">📁 Open</a>':'<span class="nolink">—</span>';
+      return'<tr><td style="font-family:var(--mono);font-size:10px;color:var(--accent)">'+(e.id||'—')+'</td><td style="font-family:var(--mono);font-size:10px">'+CONFIG.fmtShort(e.timestamp)+'</td><td style="font-weight:500">'+(e.doctype||'—')+'</td><td style="color:var(--muted)">'+(e.linkedto||'—')+'</td><td>'+(e.uploadedby||'—')+'</td><td>'+fCell+'</td></tr>';
+    }).join('');
+  }
+
+  loadData();
+</script>
+</body>
+</html>

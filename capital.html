@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>G3 — Capital</title>
+<link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+<script src="formhelper.js"></script>
+</head>
+<body>
+<div class="header">
+  <div class="header-left">
+    <a href="index.html" class="logo">G3</a>
+    <div><div class="header-title">Capital</div><div class="header-sub">Capital Sheet</div></div>
+  </div>
+  <div class="refbadge" id="ref-display">ID-...</div>
+</div>
+<nav class="nav">
+  <a href="index.html">Home</a>
+  <a href="entry.html">Entry</a>
+  <a href="vendors.html">Vendors</a>
+  <a href="sales.html">Sales</a>
+  <a href="land.html">Land</a>
+  <a href="capital.html" class="active">Capital</a>
+  <a href="documents.html">Docs</a>
+  <a href="dashboard.html">Dashboard</a>
+</nav>
+<div class="wrap">
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
+
+    <div class="card">
+      <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:14px;">Record Capital Deposit</div>
+
+      <div class="field">
+        <label>Partner Name <span class="req">*</span></label>
+        <select id="partnerName"><option value="">— select partner —</option></select>
+      </div>
+      <div class="field">
+        <input type="text" id="partnerOther" placeholder="Or type partner name" style="margin-top:-7px;">
+      </div>
+      <div class="g2">
+        <div class="field">
+          <label>Amount (₹) <span class="req">*</span></label>
+          <div class="amtwrap"><span class="pfx">₹</span><input type="number" id="amount" placeholder="0" inputmode="numeric"></div>
+        </div>
+        <div class="field">
+          <label>Date <span class="req">*</span></label>
+          <input type="date" id="date">
+        </div>
+      </div>
+      <div class="field">
+        <label>Payment Mode <span class="req">*</span></label>
+        <select id="paymentMode"><option value="">— select —</option></select>
+      </div>
+      <div class="field">
+        <label>Note</label>
+        <textarea id="note" placeholder="Purpose, bank reference..."></textarea>
+      </div>
+      <button class="subbtn" id="subbtn" onclick="submitCapital()">⬆ Save Deposit</button>
+    </div>
+
+    <div>
+      <div class="kgrid" style="grid-template-columns:1fr 1fr;margin-bottom:14px;">
+        <div class="kcard info" style="border-color:var(--info)"><div class="klabel">Total Capital</div><div class="kval" id="k-total" style="color:var(--info)">—</div></div>
+        <div class="kcard"><div class="klabel">Partners</div><div class="kval" id="k-partners">—</div></div>
+      </div>
+      <div class="tcard">
+        <div class="thead"><span class="ttitle">Partner Summary</span><button class="btn" onclick="loadData()">↻</button></div>
+        <div class="tscroll">
+          <table><thead><tr><th>Partner</th><th>Total Deposited</th><th>Transactions</th></tr></thead>
+          <tbody id="summary-body"></tbody></table>
+          <div id="summary-empty" class="empty" style="display:none">No data yet</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="tcard">
+    <div class="thead"><span class="ttitle">All Deposits</span><span style="font-family:var(--mono);font-size:10px;color:var(--muted)" id="ecount"></span></div>
+    <div class="frow">
+      <select id="f-partner" onchange="renderTable()"><option value="">All Partners</option></select>
+    </div>
+    <div class="tscroll">
+      <table><thead><tr><th>ID</th><th>Date</th><th>Partner</th><th>Amount</th><th>Mode</th><th>Note</th></tr></thead>
+      <tbody id="tbody"></tbody></table>
+      <div id="empty" class="empty" style="display:none">No entries yet</div>
+    </div>
+  </div>
+
+</div>
+<div class="toast" id="toast"></div>
+<script>
+  let allData=[];
+  let ID=CONFIG.genID('CAP');
+  document.getElementById('ref-display').textContent=ID;
+  document.getElementById('date').value=new Date().toISOString().slice(0,10);
+
+  const pSel=document.getElementById('partnerName');
+  const fPar=document.getElementById('f-partner');
+  CONFIG.partners.forEach(p=>{
+    pSel.innerHTML+='<option value="'+p.name+'">'+p.name+'</option>';
+    fPar.innerHTML+='<option value="'+p.name+'">'+p.name+'</option>';
+  });
+  CONFIG.paymentModes.forEach(p=>{ document.getElementById('paymentMode').innerHTML+='<option>'+p+'</option>'; });
+
+  function toast(msg,type){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+(type||'');setTimeout(()=>t.className='toast',3500);}
+
+  async function submitCapital(){
+    const partnerFinal=document.getElementById('partnerOther').value.trim()||document.getElementById('partnerName').value;
+    const amount=document.getElementById('amount').value.trim();
+    const paymentMode=document.getElementById('paymentMode').value;
+    const date=document.getElementById('date').value;
+    if(!partnerFinal||!amount||!paymentMode||!date){toast('Fill all required fields','err');return;}
+
+    const btn=document.getElementById('subbtn');
+    btn.disabled=true;btn.textContent='⏳ Saving...';
+
+    const params=new URLSearchParams({
+      type:'capital',id:ID,
+      partnerName:partnerFinal,
+      amount,date,paymentMode,
+      note:document.getElementById('note').value.trim(),
+    });
+
+    try{
+      await submitToSheet(params, null, 'Capital');
+      toast('✓ Saved — '+ID,'ok');
+      setTimeout(()=>{
+        document.querySelectorAll('input:not([type=date]),select,textarea').forEach(el=>el.value='');
+        document.getElementById('date').value=new Date().toISOString().slice(0,10);
+        ID=CONFIG.genID('CAP');
+        document.getElementById('ref-display').textContent=ID;
+        btn.disabled=false;btn.textContent='⬆ Save Deposit';
+        loadData();
+      },1800);
+    }catch(e){toast('Failed','err');btn.disabled=false;btn.textContent='⬆ Save Deposit';}
+  }
+
+  async function loadData(){
+    try{
+      const res=await fetch(CONFIG.sheetURL+'?action=getCapital');
+      allData=await res.json();
+      renderKPIs();renderSummary();renderTable();
+    }catch(e){}
+  }
+
+  function renderKPIs(){
+    const total=allData.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+    document.getElementById('k-total').textContent=CONFIG.fmt(total);
+    document.getElementById('k-partners').textContent=new Set(allData.map(e=>e.partnername)).size;
+  }
+
+  function renderSummary(){
+    const map={};
+    allData.forEach(e=>{const n=e.partnername||'—';if(!map[n])map[n]={amt:0,count:0};map[n].amt+=(parseFloat(e.amount)||0);map[n].count++;});
+    const rows=Object.entries(map);
+    const body=document.getElementById('summary-body');
+    const empty=document.getElementById('summary-empty');
+    if(!rows.length){body.innerHTML='';empty.style.display='block';return;}
+    empty.style.display='none';
+    body.innerHTML=rows.map(([n,d])=>'<tr><td style="font-weight:500">'+n+'</td><td style="font-family:var(--mono);color:var(--info);font-weight:600">'+CONFIG.fmt(d.amt)+'</td><td style="font-family:var(--mono);color:var(--muted)">'+d.count+'</td></tr>').join('');
+  }
+
+  function renderTable(){
+    const fp=document.getElementById('f-partner').value;
+    const filtered=allData.filter(e=>!fp||e.partnername===fp).slice().reverse();
+    document.getElementById('ecount').textContent=filtered.length+' entries';
+    const body=document.getElementById('tbody');
+    const empty=document.getElementById('empty');
+    if(!filtered.length){body.innerHTML='';empty.style.display='block';return;}
+    empty.style.display='none';
+    body.innerHTML=filtered.map(e=>{
+      const pm=(e.paymentmode||'').toLowerCase();
+      return'<tr><td style="font-family:var(--mono);font-size:10px;color:var(--accent)">'+(e.id||'—')+'</td><td style="font-family:var(--mono);font-size:10px">'+CONFIG.fmtShort(e.date||e.timestamp)+'</td><td style="font-weight:500">'+(e.partnername||'—')+'</td><td style="font-family:var(--mono);color:var(--info);font-weight:600">'+CONFIG.fmt(parseFloat(e.amount)||0)+'</td><td><span class="badge b-'+pm+'">'+(e.paymentmode||'—')+'</span></td><td style="color:var(--muted);font-size:10px">'+(e.note||'')+'</td></tr>';
+    }).join('');
+  }
+
+  loadData();
+</script>
+</body>
+</html>

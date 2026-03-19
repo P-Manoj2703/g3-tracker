@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>G3 — Land v3</title>
+<link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+<script src="formhelper.js"></script>
+</head>
+<body>
+<div class="header">
+  <div class="header-left">
+    <a href="index.html" class="logo">G3</a>
+    <div><div class="header-title">Land Transactions</div><div class="header-sub">Land Sheet</div></div>
+  </div>
+  <div class="refbadge" id="ref-display">ID-...</div>
+</div>
+<nav class="nav">
+  <a href="index.html">Home</a>
+  <a href="entry.html">Entry</a>
+  <a href="vendors.html">Vendors</a>
+  <a href="sales.html">Sales</a>
+  <a href="land.html" class="active">Land</a>
+  <a href="capital.html">Capital</a>
+  <a href="documents.html">Docs</a>
+  <a href="dashboard.html">Dashboard</a>
+</nav>
+<div class="wrap">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
+    <div class="card">
+      <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:14px;">Log Land Transaction</div>
+      <div class="g2">
+        <div class="field">
+          <label>Site ID</label>
+          <input type="text" id="siteId" placeholder="e.g. SITE-001">
+        </div>
+        <div class="field">
+          <label>Category <span class="req">*</span></label>
+          <select id="category"><option value="">— select —</option></select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Amount (₹) <span class="req">*</span></label>
+        <div class="amtwrap"><span class="pfx">₹</span><input type="number" id="amount" placeholder="0" inputmode="numeric"></div>
+      </div>
+      <div class="field">
+        <label>Payment Mode <span class="req">*</span></label>
+        <select id="paymentMode"><option value="">— select —</option></select>
+      </div>
+      <div class="field">
+        <label>Note</label>
+        <textarea id="note" placeholder="Survey number, registration details..."></textarea>
+      </div>
+      <div class="field">
+        <label>GPS</label>
+        <div class="gpsrow">
+          <input type="text" id="gps" placeholder="Tap to capture" readonly>
+          <button class="gpsbtn" id="gpsbtn" onclick="getGPS()">📍 Capture</button>
+        </div>
+      </div>
+      <button class="subbtn" id="subbtn" onclick="submitLand()">⬆ Save Transaction</button>
+    </div>
+    <div>
+      <div class="kgrid" style="grid-template-columns:1fr 1fr;margin-bottom:14px;">
+        <div class="kcard warn"><div class="klabel">Total Land Cost</div><div class="kval" id="k-total">—</div></div>
+        <div class="kcard"><div class="klabel">Transactions</div><div class="kval" id="k-count">—</div></div>
+      </div>
+      <div class="tcard">
+        <div class="thead"><span class="ttitle">Category Summary</span><button class="btn" onclick="loadData()">↻</button></div>
+        <div class="tscroll">
+          <table><thead><tr><th>Category</th><th>Amount</th><th>Count</th></tr></thead>
+          <tbody id="summary-body"></tbody></table>
+          <div id="summary-empty" class="empty" style="display:none">No data yet</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="tcard">
+    <div class="thead"><span class="ttitle">All Transactions</span><span style="font-family:var(--mono);font-size:10px;color:var(--muted)" id="ecount"></span></div>
+    <div class="tscroll">
+      <table><thead><tr><th>ID</th><th>Date</th><th>Site ID</th><th>Category</th><th>Amount</th><th>Mode</th><th>Note</th></tr></thead>
+      <tbody id="tbody"></tbody></table>
+      <div id="empty" class="empty" style="display:none">No entries yet</div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+  var allData = [];
+  var ID = CONFIG.genID('LND');
+  document.getElementById('ref-display').textContent = ID;
+
+  CONFIG.landCategories.forEach(function(c) {
+    document.getElementById('category').innerHTML += '<option>'+c+'</option>';
+  });
+  CONFIG.paymentModes.forEach(function(p) {
+    document.getElementById('paymentMode').innerHTML += '<option>'+p+'</option>';
+  });
+
+  function toast(msg, type) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + (type||'');
+    setTimeout(function(){ t.className = 'toast'; }, 3500);
+  }
+
+  function getGPS() {
+    var btn = document.getElementById('gpsbtn');
+    btn.textContent = '⏳...'; btn.disabled = true;
+    navigator.geolocation.getCurrentPosition(
+      function(p) {
+        document.getElementById('gps').value = p.coords.latitude.toFixed(6)+','+p.coords.longitude.toFixed(6);
+        btn.textContent = '✓ Got it'; btn.className = 'gpsbtn got'; btn.disabled = false;
+      },
+      function() { btn.textContent = '📍 Capture'; btn.disabled = false; toast('Location denied','err'); }
+    );
+  }
+
+  async function submitLand() {
+    var amount = document.getElementById('amount').value.trim();
+    var category = document.getElementById('category').value;
+    var paymentMode = document.getElementById('paymentMode').value;
+    if (!amount || !category || !paymentMode) { toast('Fill all required fields','err'); return; }
+
+    var btn = document.getElementById('subbtn');
+    btn.disabled = true; btn.textContent = '⏳ Saving...';
+
+    var params = new URLSearchParams({
+      type: 'land',
+      id: ID,
+      siteId: document.getElementById('siteId').value.trim(),
+      category: category,
+      amount: amount,
+      paymentMode: paymentMode,
+      note: document.getElementById('note').value.trim(),
+      gps: document.getElementById('gps').value,
+    });
+
+    var photoFile = document.getElementById('photo') ? document.getElementById('photo').files[0] : null;
+
+    try {
+      await submitToSheet(params, photoFile, 'Land');
+      toast('✓ Saved — ' + ID, 'ok');
+      setTimeout(function() {
+        document.querySelectorAll('input:not([type=file]), select, textarea').forEach(function(el){ el.value=''; });
+        document.getElementById('gpsbtn').textContent = '📍 Capture';
+        document.getElementById('gpsbtn').className = 'gpsbtn';
+        ID = CONFIG.genID('LND');
+        document.getElementById('ref-display').textContent = ID;
+        btn.disabled = false; btn.textContent = '⬆ Save Transaction';
+        loadData();
+      }, 1800);
+    } catch(err) {
+      toast('Failed — check connection','err');
+      btn.disabled = false; btn.textContent = '⬆ Save Transaction';
+    }
+  }
+
+  async function loadData() {
+    try {
+      var res = await fetch(CONFIG.sheetURL + '?action=getLand');
+      allData = await res.json();
+      renderKPIs(); renderSummary(); renderTable();
+    } catch(e) {}
+  }
+
+  function renderKPIs() {
+    var total = allData.reduce(function(s,e){ return s+(parseFloat(e.amount)||0); }, 0);
+    document.getElementById('k-total').textContent = CONFIG.fmt(total);
+    document.getElementById('k-count').textContent = allData.length;
+  }
+
+  function renderSummary() {
+    var map = {};
+    allData.forEach(function(e) {
+      var c = e.category||'Other';
+      if (!map[c]) map[c] = {amt:0, count:0};
+      map[c].amt += parseFloat(e.amount)||0;
+      map[c].count++;
+    });
+    var rows = Object.entries(map);
+    var body = document.getElementById('summary-body');
+    var empty = document.getElementById('summary-empty');
+    if (!rows.length) { body.innerHTML=''; empty.style.display='block'; return; }
+    empty.style.display='none';
+    body.innerHTML = rows.map(function(r){
+      return '<tr><td style="font-weight:500">'+r[0]+'</td><td style="font-family:var(--mono);color:var(--warn)">'+CONFIG.fmt(r[1].amt)+'</td><td style="font-family:var(--mono);color:var(--muted)">'+r[1].count+'</td></tr>';
+    }).join('');
+  }
+
+  function renderTable() {
+    var filtered = allData.slice().reverse();
+    document.getElementById('ecount').textContent = filtered.length + ' entries';
+    var body = document.getElementById('tbody');
+    var empty = document.getElementById('empty');
+    if (!filtered.length) { body.innerHTML=''; empty.style.display='block'; return; }
+    empty.style.display='none';
+    body.innerHTML = filtered.map(function(e) {
+      var pm = (e.paymentmode||'').toLowerCase();
+      return '<tr><td style="font-family:var(--mono);font-size:10px;color:var(--accent)">'+(e.id||'—')+'</td><td style="font-family:var(--mono);font-size:10px">'+CONFIG.fmtShort(e.timestamp)+'</td><td style="font-family:var(--mono);color:var(--muted)">'+(e.siteid||'—')+'</td><td style="font-weight:500">'+(e.category||'—')+'</td><td style="font-family:var(--mono);color:var(--warn);font-weight:500">'+CONFIG.fmt(parseFloat(e.amount)||0)+'</td><td><span class="badge b-'+pm+'">'+(e.paymentmode||'—')+'</span></td><td style="color:var(--muted);font-size:10px">'+(e.note||'')+'</td></tr>';
+    }).join('');
+  }
+
+  loadData();
+</script>
+</body>
+</html>
