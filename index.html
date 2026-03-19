@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>G3 Builders</title>
+<link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+</head>
+<body>
+<div class="header">
+  <div class="header-left">
+    <a href="index.html" class="logo">G3</a>
+    <div><div class="header-title">G3 Builders</div><div class="header-sub">Site Management System</div></div>
+  </div>
+  <div class="header-right">
+    <span style="font-family:var(--mono);font-size:10px;color:var(--muted)" id="today"></span>
+  </div>
+</div>
+
+<div style="max-width:640px;margin:0 auto;padding:32px 16px 80px;">
+
+  <div style="text-align:center;margin-bottom:32px;">
+    <div style="font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--accent);text-transform:uppercase;margin-bottom:10px;">Welcome</div>
+    <h1 style="font-size:26px;font-weight:300;margin-bottom:6px;">G3 Builders</h1>
+    <p style="color:var(--muted);font-family:var(--mono);font-size:11px;">Select a module to get started</p>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+    <a href="entry.html" style="text-decoration:none;">
+      <div class="card" style="cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="font-size:26px;margin-bottom:10px;">📝</div>
+        <div style="font-weight:500;font-size:14px;margin-bottom:3px;">Log Entry</div>
+        <div style="font-size:11px;color:var(--muted);">Expenses, income, payments</div>
+      </div>
+    </a>
+    <a href="vendors.html" style="text-decoration:none;">
+      <div class="card" style="cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="font-size:26px;margin-bottom:10px;">🧾</div>
+        <div style="font-weight:500;font-size:14px;margin-bottom:3px;">Vendors</div>
+        <div style="font-size:11px;color:var(--muted);">Invoices vs payments</div>
+      </div>
+    </a>
+    <a href="sales.html" style="text-decoration:none;">
+      <div class="card" style="cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--ok)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="font-size:26px;margin-bottom:10px;">🏠</div>
+        <div style="font-weight:500;font-size:14px;margin-bottom:3px;">Sales</div>
+        <div style="font-size:11px;color:var(--muted);">Flat-wise buyer payments</div>
+      </div>
+    </a>
+    <a href="land.html" style="text-decoration:none;">
+      <div class="card" style="cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--warn)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="font-size:26px;margin-bottom:10px;">🏕️</div>
+        <div style="font-weight:500;font-size:14px;margin-bottom:3px;">Land</div>
+        <div style="font-size:11px;color:var(--muted);">Site transactions</div>
+      </div>
+    </a>
+    <a href="capital.html" style="text-decoration:none;">
+      <div class="card" style="cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--info)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="font-size:26px;margin-bottom:10px;">💰</div>
+        <div style="font-weight:500;font-size:14px;margin-bottom:3px;">Capital</div>
+        <div style="font-size:11px;color:var(--muted);">Partner deposits</div>
+      </div>
+    </a>
+    <a href="documents.html" style="text-decoration:none;">
+      <div class="card" style="cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--muted)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="font-size:26px;margin-bottom:10px;">📁</div>
+        <div style="font-weight:500;font-size:14px;margin-bottom:3px;">Documents</div>
+        <div style="font-size:11px;color:var(--muted);">Uploaded file references</div>
+      </div>
+    </a>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;">
+    <a href="dashboard.html" style="text-decoration:none;">
+      <div class="card" style="cursor:pointer;transition:border-color .15s;display:flex;align-items:center;gap:14px;" onmouseover="this.style.borderColor='var(--info)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="font-size:26px;">📊</div>
+        <div><div style="font-weight:500;font-size:14px;margin-bottom:2px;">Dashboard</div><div style="font-size:11px;color:var(--muted);">Full overview</div></div>
+      </div>
+    </a>
+    <a href="investor.html" style="text-decoration:none;">
+      <div class="card" style="cursor:pointer;transition:border-color .15s;display:flex;align-items:center;gap:14px;" onmouseover="this.style.borderColor='var(--warn)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="font-size:26px;">📈</div>
+        <div><div style="font-weight:500;font-size:14px;margin-bottom:2px;">Investor</div><div style="font-size:11px;color:var(--muted);">Read-only report</div></div>
+      </div>
+    </a>
+  </div>
+
+  <div class="card">
+    <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:14px;">Quick Stats</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;text-align:center;">
+      <div><div style="font-family:var(--mono);font-size:16px;font-weight:600;color:var(--accent)" id="qs-exp">—</div><div style="font-size:9px;color:var(--muted);margin-top:2px;font-family:var(--mono);text-transform:uppercase">Expenses</div></div>
+      <div><div style="font-family:var(--mono);font-size:16px;font-weight:600;color:var(--ok)" id="qs-sal">—</div><div style="font-size:9px;color:var(--muted);margin-top:2px;font-family:var(--mono);text-transform:uppercase">Sales</div></div>
+      <div><div style="font-family:var(--mono);font-size:16px;font-weight:600;color:var(--info)" id="qs-cap">—</div><div style="font-size:9px;color:var(--muted);margin-top:2px;font-family:var(--mono);text-transform:uppercase">Capital</div></div>
+    </div>
+  </div>
+
+</div>
+<script>
+  document.getElementById('today').textContent = new Date().toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+  async function loadStats() {
+    try {
+      const res = await fetch(CONFIG.sheetURL + '?action=getAll');
+      const d = await res.json();
+      const exp = (d.entries||[]).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+      const sal = (d.sales||[]).reduce((s,e)=>s+(parseFloat(e.receivedamount)||0),0);
+      const cap = (d.capital||[]).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+      document.getElementById('qs-exp').textContent = CONFIG.fmt(exp);
+      document.getElementById('qs-sal').textContent = CONFIG.fmt(sal);
+      document.getElementById('qs-cap').textContent = CONFIG.fmt(cap);
+    } catch(e) {}
+  }
+  loadStats();
+</script>
+</body>
+</html>
